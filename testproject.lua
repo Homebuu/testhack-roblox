@@ -592,6 +592,31 @@ FlingLuck:Toggle({
 })
 
 FlingLuck:Toggle({
+    Title = "Godmode ",
+    Desc = "เปิด-ปิด โหมดอมตะ",
+    Value = false,
+    Callback = function(state)
+        _G.Godmode = state 
+        
+        if _G.Godmode then
+            task.spawn(function()
+                while _G.Godmode do
+                    task.wait(0.1)
+                    
+                    pcall(function()
+                        local player = game:GetService("Players").LocalPlayer
+                        if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+                            local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+                            
+                            humanoid.Health = humanoid.MaxHealth
+                        end
+                    end)
+                end
+            end)
+        end
+    end
+})
+FlingLuck:Toggle({
     Title = "Safe Aim-Bot",
     Desc = "ล็อคเป้าหมาย มีโอกาศแบนสูง",
     Default = false,
