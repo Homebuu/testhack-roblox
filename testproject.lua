@@ -746,106 +746,82 @@ local cam = workspace.CurrentCamera
 local ghostChar = nil 
 local ghostConnection = nil
 local originalCFrame = nil
-
 local function cleanUpGhost()
-    if ghostConnection then ghostConnection:Disconnect(); ghostConnection = nil end
     if ghostChar then
         ghostChar:Destroy()
         ghostChar = nil
     end
+    if ghostConnection then
+        ghostConnection:Disconnect()
+        ghostConnection = nil
+    end
 end
-
 FlingLuck:Toggle({
     Title = "Ghost Mode V1",
-    Desc = "of god of year of regenzy",
+    Desc = "ทิ้งร่างแยก ตัวจริงล่องหน พอกดปิดวาร์ปกลับ",
     Value = false,
     Callback = function(state)
         _G.AstralMode = state
         local char = lp.Character
+        local realHum = char and char:FindFirstChildOfClass("Humanoid")
+        local realRoot = char and char:FindFirstChild("HumanoidRootPart")
         
         if state then
-            if char and char:FindFirstChild("HumanoidRootPart") then
-                originalCFrame = char.HumanoidRootPart.CFrame
+            if realRoot and realHum then
+                originalCFrame = realRoot.CFrame
                 char.Archivable = true
                 
-                -- 1. สร้างร่างแยก
                 ghostChar = char:Clone()
-                ghostChar.Name = "Ghost_Spirit"
+                ghostChar.Name = "Ghost_Clone"
                 ghostChar.Parent = workspace
                 
-                -- [[ แก้ปัญหาร่างแข็ง & กล่องขาว ]] --
-                local ghostHum = ghostChar:FindFirstChildOfClass("Humanoid")
-                local realHum = char:FindFirstChildOfClass("Humanoid")
-                
                 for _, obj in pairs(ghostChar:GetDescendants()) do
-                    -- ลบกล่องขาวๆ และพวก Mesh ที่แสดงผลผิดปกติ
-                    if obj:IsA("SelectionBox") or obj:IsA("BoxHandleAdornment") then
+                    if obj:IsA("LocalScript") or obj:IsA("Script") or obj:IsA("SelectionBox") or obj:IsA("BoxHandleAdornment") then
                         obj:Destroy()
                     end
-                    
-                    -- ลบ Script ออกให้หมด
-                    if obj:IsA("LocalScript") or obj:IsA("Script") then 
-                        obj:Destroy() 
-                    end
-                    
-                    -- ทำให้ "หายตัว" (ทั้งตัวละครและเครื่องประดับ)
+                end
+                
+                local ghostRoot = ghostChar:FindFirstChild("HumanoidRootPart")
+                if ghostRoot then
+                    ghostRoot.Anchored = true
+                end
+                
+                for _, obj in pairs(char:GetDescendants()) do
                     if obj:IsA("BasePart") or obj:IsA("Decal") then
-                        obj.Transparency = 0.5
-                        obj.CanCollide = true -- ให้ชนกำแพงได้ปกติ
+                        obj.Transparency = 1 -- ล่องหนสมบูรณ์แบบ (0.5 คือกึ่งโปร่งใส)
                     end
                 end
-
-                -- 2. ย้ายมุมกล้อง
-                cam.CameraSubject = ghostHum
-
-                -- 3. ระบบ Sync แบบ Real-time (ไม่ให้แข็ง)
+                
+                -- 4. ระบบ Sync และควบคุมร่างจริง (ตัวเราล่องหนบิน/เดินไป)
                 ghostConnection = runService.RenderStepped:Connect(function()
-                    if _G.AstralMode and ghostChar and char then
-                        -- บังคับร่างแยกเดิน (ลื่นๆ ไม่แข็ง)
-                        ghostHum:Move(realHum.MoveDirection, false)
-                        
-                        -- Sync Animation (ทำให้ร่างแยกหายใจ/เดิน/ขยับท่าทางตามตัวจริง)
-                        if realHum.ActiveAnimationLauncher then
-                             -- ปกติ Roblox จะเล่น Anim ให้อัตโนมัติถ้า Humanoid ขยับ
-                        end
-
-                        -- หันหน้าตามกล้อง
-                        ghostChar.HumanoidRootPart.CFrame = CFrame.new(ghostChar.HumanoidRootPart.Position) * CFrame.Angles(0, select(2, cam.CFrame:ToEulerAnglesYXZ()), 0)
-                        
-                        -- ล็อคร่างจริงไว้ที่จุดเกิด (ไม่ให้หายตัว)
-                        char.HumanoidRootPart.CFrame = originalCFrame
-                        char.HumanoidRootPart.Velocity = Vector3.zero
-                        
-                        -- Sync Tool & Action
-                        local realTool = char:FindFirstChildOfClass("Tool")
-                        if realTool then
-                            if not ghostChar:FindFirstChild(realTool.Name) then
-                                local cloneTool = realTool:Clone()
-                                -- ลบกล่องขาวที่ติดมากับ Tool (ถ้ามี)
-                                for _, part in pairs(cloneTool:GetDescendants()) do
-                                    if part:IsA("BasePart") then part.Transparency = 0.5 end
-                                end
-                                cloneTool.Parent = ghostChar
-                            end
-                            -- ระบบกดยิง/ตี
-                            if game:GetService("UserInputService"):IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
-                                local t = ghostChar:FindFirstChild(realTool.Name)
-                                if t then t:Activate() end
-                            end
-                        else
-                            for _, t in pairs(ghostChar:GetChildren()) do
-                                if t:IsA("Tool") then t:Destroy() end
-                            end
+                    if not _G.AstralMode then return end
+                    
+                    -- คุณสามารถเพิ่มระบบ NoClip (ทะลุกำแพง) ให้ร่างจริงตรงนี้ได้ เพื่อให้เหมือนร่างวิญญาณ
+                    for _, part in pairs(char:GetDescendants()) do
+                        if part:IsA("BasePart") then
+                            part.CanCollide = false
                         end
                     end
                 end)
             end
         else
-            -- 4. สลับกลับร่างปกติ
-            if ghostChar and char:FindFirstChild("HumanoidRootPart") then
-                char.HumanoidRootPart.CFrame = ghostChar.HumanoidRootPart.CFrame
-                cam.CameraSubject = char.Humanoid
+            if char and realRoot then
+                if ghostChar and ghostChar:FindFirstChild("HumanoidRootPart") then
+                    realRoot.CFrame = ghostChar.HumanoidRootPart.CFrame
+                else
+                    realRoot.CFrame = originalCFrame -- สำรองไว้เผื่อร่างแยกโดนลบ
+                end
+                
+                for _, obj in pairs(char:GetDescendants()) do
+                    if obj:IsA("BasePart") or obj:IsA("Decal") then
+                        obj.Transparency = 0 -- กลับมามองเห็นปกติ
+                        obj.CanCollide = true
+                    end
+                end
+                
+                cam.CameraSubject = realHum
             end
+            
             cleanUpGhost()
             _G.AstralMode = false
         end
