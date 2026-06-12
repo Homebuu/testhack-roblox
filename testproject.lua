@@ -265,7 +265,13 @@ local function toggleFly(state)
 end
 
 local function SHubFling(TargetPlayer)
-    if not (Char and Hum and Root) then return end
+    -- ดึงตัวแปรของผู้ใช้สคริปต์ใหม่ทุกครั้งเพื่อป้องกันบั๊กตอนตาย
+    local MyChar = lp.Character
+    local MyHum = MyChar and MyChar:FindFirstChildOfClass("Humanoid")
+    local MyRoot = MyChar and MyChar:FindFirstChild("HumanoidRootPart")
+    
+    if not (MyChar and MyHum and MyRoot) then return end
+    
     local TCharacter = TargetPlayer.Character
     if not TCharacter then return end
     local THumanoid = TCharacter:FindFirstChildOfClass("Humanoid")
@@ -273,57 +279,76 @@ local function SHubFling(TargetPlayer)
     local THead = TCharacter:FindFirstChild("Head")
     local Accessory = TCharacter:FindFirstChildOfClass("Accessory")
     local Handle = Accessory and Accessory:FindFirstChild("Handle")
-    env.OldPos = Root.CFrame
-     repeat task.wait()
-    Workspace.CurrentCamera.CameraSubject = THead or Handle or THumanoid
-     until Workspace.CurrentCamera.CameraSubject == THead or Handle or THumanoid
+    
+    -- ตั้งค่าเป้าหมายที่จะเอาตัวไปชน
+    local target = TRootPart or THead or Handle
+    if not target then return end
+
+    local OldPos = MyRoot.CFrame
+    local Camera = Workspace.CurrentCamera
+    local TargetSubject = THead or Handle or THumanoid
+    
+    -- ล็อกเป้าหมายกล้อง
+    repeat 
+        Camera.CameraSubject = TargetSubject
+        task.wait()
+    until Camera.CameraSubject == TargetSubject
+
+    -- ฟังก์ชันย่อยสำหรับวาร์ปและส่งแรงหมุน (Fling)
     local function FPos(BasePart, Pos, Ang)
         local targetCF = CFrame.new(BasePart.Position) * Pos * Ang
-        Root.CFrame = targetCF
-        Char:SetPrimaryPartCFrame(targetCF)
-        Root.Velocity = Vector3.new(9e7, 9e8, 9e7)
-        Root.RotVelocity = Vector3.new(9e8, 9e8, 9e8)
+        MyRoot.CFrame = targetCF
+        MyRoot.Velocity = Vector3.new(9e7, 9e8, 9e7)
+        MyRoot.RotVelocity = Vector3.new(9e8, 9e8, 9e8)
     end
-    local function SFBasePart(BasePart)
-        local start = tick()
-        local angle = 0
-        env.timeout = env.timeout or 2.5
-        repeat
-            if Root and THumanoid then
-                angle += 100
-                for _, offset in ipairs{CFrame.new(0, 1.5, 0),CFrame.new(0, -1.5, 0),CFrame.new(2.25, 1.5, -2.25),CFrame.new(-2.25, -1.5, 2.25)} do
-                    FPos(BasePart, offset + THumanoid.MoveDirection, CFrame.Angles(math.rad(angle), 0, 0))
-                    task.wait()
-                end
-            end
-        until BasePart.Velocity.Magnitude > 500 or tick() - start > env.timeout
-    end
-    --Workspace.FallenPartsDestroyHeight = 1000
+
+    -- ใส่แรง Velocity ป้องกันตัวเราล้ม/ค้าง
     local BV = Instance.new("BodyVelocity")
     BV.Name = "SeYyyVel!?"
     BV.Velocity = Vector3.new(9e8, 9e8, 9e8)
     BV.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-    BV.Parent = Root
-    Hum:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
-    local target = TRootPart or THead or Handle
-    if target then SFBasePart(target) end
-    BV:Destroy()
-   Hum:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
-   repeat task.wait()
-    Workspace.CurrentCamera.CameraSubject = Hum
-   until Workspace.CurrentCamera.CameraSubject == Hum
+    BV.Parent = MyRoot
+    
+    MyHum:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+
+    -- เริ่มทำงานการ Fling (วนลูปสับตำแหน่งรอบตัวเป้าหมาย)
+    local start = tick()
+    local angle = 0
+    local timeout = 2.5 -- ตั้งเวลาค้างไว้สูงสุด 2.5 วินาที
+    
     repeat
-        local cf = env.OldPos * CFrame.new(0, .5, 0)
-        Root.CFrame = cf
-        Char:SetPrimaryPartCFrame(cf)
-        Hum:ChangeState("GettingUp")
-        for _, part in ipairs(Char:GetChildren()) do
+        if MyRoot and THumanoid and target then
+            angle = angle + 100
+            for _, offset in ipairs({CFrame.new(0, 1.5, 0), CFrame.new(0, -1.5, 0), CFrame.new(2.25, 1.5, -2.25), CFrame.new(-2.25, -1.5, 2.25)}) do
+                FPos(target, offset + THumanoid.MoveDirection, CFrame.Angles(math.rad(angle), 0, 0))
+                task.wait()
+            end
+        end
+    until not target or not target.Parent or target.Velocity.Magnitude > 500 or (tick() - start) > timeout
+
+    -- เคลียร์ระบบหลังจาก Fling เสร็จสิ้น
+    BV:Destroy()
+    MyHum:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+    
+    -- คืนค่ากล้องกลับมาที่ตัวเอง
+    repeat 
+        Camera.CameraSubject = MyHum
+        task.wait()
+    until Camera.CameraSubject == MyHum
+
+    -- วาร์ปตัวเองกลับมาที่จุดเดิมก่อนสั่ง Fling
+    repeat
+        local cf = OldPos * CFrame.new(0, 0.5, 0)
+        MyRoot.CFrame = cf
+        MyHum:ChangeState("GettingUp")
+        for _, part in ipairs(MyChar:GetChildren()) do
             if part:IsA("BasePart") then
-                part.Velocity, part.RotVelocity = Vector3.zero, Vector3.zero
+                part.Velocity = Vector3.new(0, 0, 0)
+                part.RotVelocity = Vector3.new(0, 0, 0)
             end
         end
         task.wait()
-    until (Root.Position - env.OldPos.p).Magnitude < 25
+    until (MyRoot.Position - OldPos.Position).Magnitude < 25
 end
 
 -- [[ Tabs Setup ]] --
@@ -570,19 +595,13 @@ FlingLuck:Toggle({
     Value = false,
     Callback = function(state)
         flingEnabled = state
-        local char = lp.Character
-        local hrp = char and char:FindFirstChild("HumanoidRootPart")
-        
         if flingEnabled then
             if selectedPlayer == "" or selectedPlayer == nil then
                 WindUI:Notify({Title = "Error!", Content = "กรุณาเลือกผู้เล่นก่อน!", Type = "Error"})
                 return
             end
-
             local target = game.Players:FindFirstChild(selectedPlayer)
-            if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-                local originalCFrame = hrp.CFrame
-					
+            if target then
                 task.spawn(function()
                     SHubFling(target)
                 end)
