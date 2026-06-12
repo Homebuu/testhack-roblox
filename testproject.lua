@@ -13,7 +13,7 @@ local player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 
 local Window = WindUI:CreateWindow({
-	Title = "Homebuu xHub",
+	Title = "HG HUBx1",
 	Author = "by homebuu",
 	Icon = "palette",
 	Parent = targetParent,
