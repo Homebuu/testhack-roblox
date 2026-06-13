@@ -1271,7 +1271,7 @@ murderermystery2:Toggle({
 
 
 local flingVipEnabled = false 
-local FlingVipToggle 
+local FlingVipToggle = nil
 local function SHubFlingvip(TargetPlayer)
     local MyChar = lp.Character
     local MyHum = MyChar and MyChar:FindFirstChildOfClass("Humanoid")
