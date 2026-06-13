@@ -1269,7 +1269,7 @@ murderermystery2:Toggle({
     end
 })
 
-
+--[[
 local flingVipEnabled = false 
 local FlingVipToggle = nil
 local function SHubFlingvip(TargetPlayer)
@@ -1415,6 +1415,7 @@ kuyted2006:Toggle({
         end
     end
 })
+]]--
 
 local OldNameCall
 OldNameCall = hookmetamethod(game, "__namecall", function(self, ...)
