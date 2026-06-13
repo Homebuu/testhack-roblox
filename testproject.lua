@@ -596,7 +596,7 @@ FlingLuck:Toggle({
             local target = game.Players:FindFirstChild(selectedPlayer)
             if target then
                 task.spawn(function()
-                    (target)
+                    SHubFling(target)
                 end)
             end
         end
@@ -1059,7 +1059,7 @@ murderermystery2:Toggle({
 		end
             
 		if Murderer and Murderer ~= LocalPlayer then
-			(Murderer)
+			SHubFling(Murderer)
 		end
             
         task.wait(1) 
@@ -1078,7 +1078,7 @@ murderermystery2:Toggle({
 			end
 		end
 		if Target and Target ~= LocalPlayer then
-		    (Target)
+		    SHubFling(Target)
 		end
     end
 })
