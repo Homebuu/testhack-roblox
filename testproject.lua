@@ -351,8 +351,7 @@ local PlayerVisible = Window:Tab({ Title = "การมองเห็น", Ico
 local FlingLuck = Window:Tab({ Title = "ฟังก์ชั่นเถื่อน", Icon = "geist:warning" }) 
 
 local murderermystery2 = Window:Tab({ Title = "MM2", Icon = "geist:slash-forward" }) 
-
-local vipBTN = Window:Tab({ Title = "VIP" }) 
+local vipBTN = Window:Tab({ Title = "VIP", Icon = "crown" })
 local discordBTN = Window:Tab({ Title = "Discord Server", Icon = "geist:discord" }) 
 
 -- --- [ เมนูหลัก ] --- --
@@ -1269,7 +1268,6 @@ murderermystery2:Toggle({
     end
 })
 
---[[
 local flingVipEnabled = false 
 local FlingVipToggle = nil
 local function SHubFlingvip(TargetPlayer)
@@ -1392,8 +1390,8 @@ local function SHubFlingvip(TargetPlayer)
     end
 end
 
-vipBTN:Toggle({
-    Title = "Fling Player (FREEZE)",
+FlingVipToggle = vipBTN:Toggle({
+	Title = "Fling Player (FREEZE)",
     Desc = "เตะผู้เล่นออกจากแมพ > เลือกจากเมณูค้นหา Teleport",
     Value = false,
     Callback = function(state)
@@ -1415,7 +1413,6 @@ vipBTN:Toggle({
         end
     end
 })
-]]--
 
 local OldNameCall
 OldNameCall = hookmetamethod(game, "__namecall", function(self, ...)
