@@ -1379,24 +1379,21 @@ local function SHubFlingvip(TargetPlayer)
 end
 	
 FlingVipToggle = vipBTN:Toggle({
-	Title = "Fling Player (FREEZE)",
+	Title = "Fling Vip",
     Desc = "เตะผู้เล่นออกจากแมพ > เลือกจากเมณูค้นหา Teleport",
     Value = false,
     Callback = function(state)
-       	flingVipEnabled = state
-        if flingVipEnabled then
+       	flingEnabled = state
+        if flingEnabled then
             if selectedPlayer == "" or selectedPlayer == nil then
                 WindUI:Notify({Title = "Error!", Content = "กรุณาเลือกผู้เล่นก่อน!", Type = "Error"})
-                if FlingVipToggle and FlingVipToggle.Set then FlingVipToggle:Set(false) end
                 return
             end
             local target = game.Players:FindFirstChild(selectedPlayer)
             if target then
                 task.spawn(function()
-                    SHubFlingvip(target) 
+                    SHubFlingvip(target)
                 end)
-            else
-                if FlingVipToggle and FlingVipToggle.Set then FlingVipToggle:Set(false) end
             end
         end
     end
