@@ -1268,31 +1268,15 @@ murderermystery2:Toggle({
     end
 })
 
-local flingVipEnabled = false 
-local FlingVipToggle = nil
 local function SHubFlingvip(TargetPlayer)
     local MyChar = lp.Character
     local MyHum = MyChar and MyChar:FindFirstChildOfClass("Humanoid")
     local MyRoot = MyChar and MyChar:FindFirstChild("HumanoidRootPart")
     
-    local function disableToggle()
-        flingVipEnabled = false
-        if FlingVipToggle and FlingVipToggle.Set then
-            FlingVipToggle:Set(false) 
-        end
-    end
-    
-    if not (MyChar and MyHum and MyRoot) then 
-        disableToggle()
-        return 
-    end
+    if not (MyChar and MyHum and MyRoot) then return end
     
     local TCharacter = TargetPlayer.Character
-    if not TCharacter then 
-        disableToggle()
-        return 
-    end
-    
+    if not TCharacter then return end
     local THumanoid = TCharacter:FindFirstChildOfClass("Humanoid")
     local TRootPart = THumanoid and THumanoid.RootPart
     local THead = TCharacter:FindFirstChild("Head")
@@ -1300,9 +1284,11 @@ local function SHubFlingvip(TargetPlayer)
     local Handle = Accessory and Accessory:FindFirstChild("Handle")
     
     local target = TRootPart or THead or Handle
-    if not target then 
-        disableToggle()
-        return 
+    if not target then return end
+
+    local TargetSeat = THumanoid and THumanoid.SeatPart
+    if TargetSeat then
+        target = TargetSeat 
     end
 
     local OldPos = MyRoot.CFrame
@@ -1312,84 +1298,86 @@ local function SHubFlingvip(TargetPlayer)
     repeat 
         Camera.CameraSubject = TargetSubject
         task.wait()
-    until Camera.CameraSubject == TargetSubject or not flingVipEnabled
+    until Camera.CameraSubject == TargetSubject
 
     local function FPos(BasePart, Pos, Ang)
-        if not MyRoot then return end
+        for _, part in ipairs(MyChar:GetChildren()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+
         local targetCF = CFrame.new(BasePart.Position) * Pos * Ang
         MyRoot.CFrame = targetCF
-        MyRoot.Velocity = Vector3.new(9e37, 9e37, 9e37)    
-        MyRoot.RotVelocity = Vector3.new(9e37, 9e37, 9e37)  
+        
+        MyRoot.Velocity = Vector3.new(9e8, math.random(5e8, 9e8), 9e8)
+        MyRoot.RotVelocity = Vector3.new(9e8, 9e8, 9e8)
     end
 
     local BV = Instance.new("BodyVelocity")
     BV.Name = "SeYyyVel!?"
-    BV.Velocity = Vector3.new(9e37, 9e37, 9e37)            
+    BV.Velocity = Vector3.new(9e8, 9e8, 9e8)
     BV.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
     BV.Parent = MyRoot
     
     MyHum:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
 
+    local start = tick()
     local angle = 0
+    local timeout = 3.0 
+    
+    local noclipLoop = game:GetService("RunService").Heartbeat:Connect(function()
+        for _, part in ipairs(MyChar:GetChildren()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+    end)
     
     repeat
-        if MyRoot and target and target.Parent and THumanoid and THumanoid.Health > 0 and flingVipEnabled then
-            angle = angle + 200 
+        if MyRoot and THumanoid and target then
+            angle = angle + 150 
             
             local offsets = {
-                CFrame.new(0, 1.5, 0), 
-                CFrame.new(0, -1.5, 0), 
-                CFrame.new(3, 1.5, -3), 
-                CFrame.new(-3, -1.5, 3),
-                CFrame.new(0, 0, 0)
+                CFrame.new(0, -1, 0),    -- มุดไปงัดจากใต้เบาะ/ใต้ท้องพร็อพ (จุดตายของการนั่ง)
+                CFrame.new(0, 1, 0),     -- อัดจากข้างบนหัวคนนั่งกระแทกลงมา
+                CFrame.new(1.5, 0, 0),   -- ชนกระแทกด้านข้างซ้าย
+                CFrame.new(-1.5, 0, 0),  -- ชนกระแทกด้านข้างขวา
+                CFrame.new(0, 0, 1.5),   -- เสยจากด้านหลัง
+                CFrame.new(0, 0, -1.5)   -- อัดจากด้านหน้า
             }
             
             for _, offset in ipairs(offsets) do
-                if target and target.Parent then
-                    FPos(target, offset + (THumanoid.MoveDirection * 2), CFrame.Angles(math.rad(angle), math.rad(angle), 0))
-                    task.wait()
-                end
+                FPos(target, offset, CFrame.Angles(math.rad(angle), math.rad(angle), math.rad(angle)))
+                task.wait()
             end
         end
-        
-        local targetGone = (not target or not target.Parent or not TargetPlayer.Parent)
-        local targetDead = (THumanoid and THumanoid.Health <= 0)
-        local targetFlinged = (target and target.Velocity.Magnitude > 1000) 
-        local targetVoid = (target and target.Position.Y < -500)
-        
-    until targetGone or targetDead or targetFlinged or targetVoid or not flingVipEnabled
+    until not target or not target.Parent or (THumanoid and not THumanoid.Sit and target.Velocity.Magnitude > 300) or (tick() - start) > timeout
 
-    disableToggle()
-
-    if BV then BV:Destroy() end
-    if MyHum then MyHum:SetStateEnabled(Enum.HumanoidStateType.Seated, true) end
+    noclipLoop:Disconnect()
+    BV:Destroy()
+    MyHum:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
     
-    if MyHum then
-        repeat 
-            Camera.CameraSubject = MyHum
-            task.wait()
-        until Camera.CameraSubject == MyHum
-    end
+    repeat 
+        Camera.CameraSubject = MyHum
+        task.wait()
+    until Camera.CameraSubject == MyHum
 
-    if MyRoot and MyHum then
-        local returnAttempts = 0
-        repeat
-            returnAttempts = returnAttempts + 1
-            local cf = OldPos * CFrame.new(0, 0.5, 0)
-            MyRoot.CFrame = cf
-            MyHum:ChangeState("GettingUp")
-            
-            for _, part in ipairs(MyChar:GetChildren()) do
-                if part:IsA("BasePart") then
-                    part.Velocity = Vector3.new(0, 0, 0)
-                    part.RotVelocity = Vector3.new(0, 0, 0)
-                end
+    repeat
+        local cf = OldPos * CFrame.new(0, 0.5, 0)
+        MyRoot.CFrame = cf
+        MyHum:ChangeState("GettingUp")
+        for _, part in ipairs(MyChar:GetChildren()) do
+            if part:IsA("BasePart") then
+                part.Velocity = Vector3.new(0, 0, 0)
+                part.RotVelocity = Vector3.new(0, 0, 0)
+                part.CanCollide = true
             end
-            task.wait()
-        until (MyRoot.Position - OldPos.Position).Magnitude < 25 or returnAttempts > 10
-    end
+        end
+        task.wait()
+    until (MyRoot.Position - OldPos.Position).Magnitude < 25
 end
-
+	
 FlingVipToggle = vipBTN:Toggle({
 	Title = "Fling Player (FREEZE)",
     Desc = "เตะผู้เล่นออกจากแมพ > เลือกจากเมณูค้นหา Teleport",
