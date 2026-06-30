@@ -863,6 +863,7 @@ if remote then
             updateHighlights() 
         end
     end)
+	local songMusic = rs:WaitForChild("Inventory")
 end
 local function getRoles()
 	local success, data = pcall(function()
@@ -1264,6 +1265,40 @@ murderermystery2:Toggle({
                     task.wait(0.5)
                 end
             end)
+        end
+    end
+})
+
+murderermystery2:Toggle({
+    Title = "ใส่ ID เพลงตรงนี้",
+    Placeholder = "พิมพ์ตัวเลขไอดีเพลง...",
+    Value = "135346339935594", 
+    Callback = function(text)
+        -- ปล่อยว่างไว้ได้ ระบบจะจำค่าอัตโนมัติ
+    end
+})
+
+murderermystery2:Toggle({
+    Title = "เปิดเพลงลำโพง",
+    Desc = "เปิด/ปิด เพลงตามไอดีที่กรอกด้านบน",
+    Value = false,
+    Callback = function(state)
+        local songID = SongInput.Value 
+        
+        if state then
+            local args = {
+                [1] = workspace.Sisiksj1.Radio.Sound,
+                [2] = "https://www.roblox.com/asset/?id=" .. songID,
+                [3] = true
+            }
+            Remotes.PlaySong:FireServer(unpack(args))
+        else
+            local args = {
+                [1] = workspace.Sisiksj1.Radio.Sound,
+                [2] = "https://www.roblox.com/asset/?id=" .. songID,
+                [3] = false
+            }
+            Remotes.PlaySong:FireServer(unpack(args))
         end
     end
 })
