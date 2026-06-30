@@ -1269,14 +1269,14 @@ murderermystery2:Toggle({
     end
 })
 
-local SongInput = murderermystery2:Input({
+local SongInput = vipBTN:Input({
     Title = "ใส่ ID เพลงตรงนี้",
     Placeholder = "พิมพ์ตัวเลขไอดีเพลง...",
     Value = "135346339935594", -- ไอดีเริ่มต้น
     Callback = function() end
 })
 
-murderermystery2:Toggle({
+vipBTN:Toggle({
     Title = "เปิดเพลงลำโพง",
     Desc = "เปิด/ปิด เพลงตามไอดีที่กรอกด้านบน",
     Value = false,
