@@ -1269,13 +1269,11 @@ murderermystery2:Toggle({
     end
 })
 
-murderermystery2:Toggle({
+local SongInput = murderermystery2:Input({
     Title = "ใส่ ID เพลงตรงนี้",
     Placeholder = "พิมพ์ตัวเลขไอดีเพลง...",
-    Value = "135346339935594", 
-    Callback = function(text)
-        -- ปล่อยว่างไว้ได้ ระบบจะจำค่าอัตโนมัติ
-    end
+    Value = "135346339935594", -- ไอดีเริ่มต้น
+    Callback = function() end
 })
 
 murderermystery2:Toggle({
@@ -1291,14 +1289,14 @@ murderermystery2:Toggle({
                 [2] = "https://www.roblox.com/asset/?id=" .. songID,
                 [3] = true
             }
-            Remotes.PlaySong:FireServer(unpack(args))
+            songMusic.PlaySong:FireServer(unpack(args))
         else
             local args = {
                 [1] = workspace.Sisiksj1.Radio.Sound,
                 [2] = "https://www.roblox.com/asset/?id=" .. songID,
                 [3] = false
             }
-            Remotes.PlaySong:FireServer(unpack(args))
+            songMusic.PlaySong:FireServer(unpack(args))
         end
     end
 })
