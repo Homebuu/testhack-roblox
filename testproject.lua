@@ -1281,22 +1281,14 @@ murderermystery2:Toggle({
     Desc = "เปิด/ปิด เพลงตามไอดีที่กรอกด้านบน",
     Value = false,
     Callback = function(state)
-        local songID = SongInput.Value 
-        
-        if state then
-            local args = {
-                [1] = workspace.Sisiksj1.Radio.Sound,
-                [2] = "https://www.roblox.com/asset/?id=" .. songID,
-                [3] = true
-            }
-            songMusic.PlaySong:FireServer(unpack(args))
-        else
-            local args = {
-                [1] = workspace.Sisiksj1.Radio.Sound,
-                [2] = "https://www.roblox.com/asset/?id=" .. songID,
-                [3] = false
-            }
-            songMusic.PlaySong:FireServer(unpack(args))
+        local playerFolder = workspace:FindFirstChild(LocalPlayer.Name)
+		if playerFolder and playerFolder:FindFirstChild("Radio") and playerFolder.Radio:FindFirstChild("Sound") then
+            local radioSound = playerFolder.Radio.Sound
+            songMusic.PlaySong:FireServer(
+                radioSound, 
+                "https://www.roblox.com/asset/?id=" .. SongInput.Value, 
+                state
+            )
         end
     end
 })
