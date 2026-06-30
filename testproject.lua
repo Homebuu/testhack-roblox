@@ -1269,11 +1269,14 @@ murderermystery2:Toggle({
     end
 })
 
+local SongID = "2875685811"
 local SongInput = vipBTN:Input({
     Title = "ใส่ ID เพลงตรงนี้",
     Placeholder = "พิมพ์ตัวเลขไอดีเพลง...",
-    Value = "135346339935594", -- ไอดีเริ่มต้น
-    Callback = function() end
+    Value = SongID,
+    Callback = function(text)
+        SongID = text
+    end
 })
 
 vipBTN:Toggle({
@@ -1284,10 +1287,10 @@ vipBTN:Toggle({
         local playerFolder = workspace:FindFirstChild(LocalPlayer.Name)
 		if playerFolder and playerFolder:FindFirstChild("Radio") and playerFolder.Radio:FindFirstChild("Sound") then
             local radioSound = playerFolder.Radio.Sound
-            songMusic.PlaySong:FireServer(
+			songMusic.PlaySong:FireServer(
                 radioSound, 
-                "https://www.roblox.com/asset/?id=" .. SongInput.Value, 
-                state
+                "https://www.roblox.com/asset/?id=" .. SongID, 
+                true
             )
         end
     end
